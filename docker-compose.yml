@@ -1,78 +1,16 @@
-version: '3.8'
-
-# ============================================================================
-# IMAGE GALLERY - DOCKER COMPOSE (For local Docker development)
-# ============================================================================
-# This compose file sets up a complete local development environment:
-# - MySQL 8.0 database
-# - Flask application
-# - phpMyAdmin for database management
-#
-# USAGE:
-# 1. Make sure .env has DEPLOYMENT_MODE=docker
-# 2. Configure MYSQL_ROOT_PASSWORD and MYSQL_PASSWORD in .env
-# 3. Run: docker-compose up -d
-# 4. Access:
-#    - App: http://localhost:5000
-#    - phpMyAdmin: http://localhost:8080
-# 5. Stop: docker-compose down
-#
-# For AWS deployment instead, use docker-compose.aws.yml:
-#    docker-compose -f docker-compose.aws.yml up -d
-# ============================================================================
-
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: image_gallery_mysql
-    env_file: .env  # Uses DEPLOYMENT_MODE, MYSQL_*, etc from .env
+  web:
+    build: .
+    container_name: gallery_web_app
+    restart: always
+    env_file:
+      - .env
     ports:
-      - "3306:3306"
+      - "127.0.0.1:5000:5000"
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./app/static/uploads:/app/app/static/uploads
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-    networks:
-      - gallery_network
-    # Note: DEPLOYMENT_MODE and MYSQL_* variables read from .env
-
-  flask_app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: image_gallery_app
-    env_file: .env  # Uses DEPLOYMENT_MODE=docker, S3_BUCKET_NAME, etc from .env
-    ports:
-      - "5000:5000"
-    volumes:
-      - ./app:/app/app
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - gallery_network
-    command: python3 run.py
-    # Important: App will auto-detect DEPLOYMENT_MODE=docker from .env
-    # and connect to MySQL using MYSQL_USER and MYSQL_PASSWORD
-
-  phpmyadmin:
-    image: phpmyadmin
-    container_name: image_gallery_phpmyadmin
-    env_file: .env  # Uses PMA_HOST, PMA_USER, PMA_PASSWORD from .env
-    ports:
-      - "8080:80"
-    depends_on:
-      - mysql
-    networks:
-      - gallery_network
-
-volumes:
-  mysql_data:
-    driver: local
-
-networks:
-  gallery_network:
-    driver: bridge
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
