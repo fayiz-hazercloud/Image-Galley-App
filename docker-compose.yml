@@ -4,7 +4,7 @@ services:
     container_name: gallery_web_app
     restart: always
     env_file:
-      - .env
+      - env/.env
     ports:
       - "127.0.0.1:5000:5000"
     volumes:
