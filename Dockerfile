@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir PyMySQL gunicorn
+RUN pip install --no-cache-dir PyMySQL gunicorn cryptography
 
 # Create dedicated non-root user with a home directory
 RUN groupadd -r appgroup && useradd -r -g appgroup -d /home/appuser -m appuser
